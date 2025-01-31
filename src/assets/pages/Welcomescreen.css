@@ -1,0 +1,13 @@
+.instructions {
+    margin: 60px 0;
+}
+
+p {
+    line-height: 2;
+    justify-content: center;
+
+}
+
+p.instructions {
+    margin: 0 20%;
+}
