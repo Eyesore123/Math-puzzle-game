@@ -1,5 +1,6 @@
 import '../../index.css';
 import './Welcomescreen.css';
+
 export default function Welcomescreen() {
   return (
     <div>

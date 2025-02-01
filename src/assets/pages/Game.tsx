@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Game.css';
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface Puzzle {
   numbers: number[];
@@ -13,9 +15,24 @@ interface GameState {
   score: number;
   bestScore: number;
   gameStarted: boolean;
+  questionsAnswered: number;
+  gameOver: boolean;
 }
 
-const Game: React.FC = () => {
+interface LeaderboardEntry {
+  name: string;
+  score: number;
+}
+
+interface GameProps {
+  setLeaderboard: (leaderboard: {
+    easy: LeaderboardEntry[];
+    medium: LeaderboardEntry[];
+    hard: LeaderboardEntry[];
+  }) => void;
+}
+
+const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
   const [currentGame, setCurrentGame] = useState<GameState>({
     puzzle: {
       numbers: [],
@@ -26,15 +43,17 @@ const Game: React.FC = () => {
     score: 0,
     bestScore: 0,
     gameStarted: false,
+    questionsAnswered: 0,
+    gameOver: false
   });
 
-  const [userAnswer, setUserAnswer] = useState<string>(''); // Store user's answer
+  const [userAnswer, setUserAnswer] = useState<string>('');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | ''>('');
-  const [feedbackMessage, setFeedbackMessage] = useState<string>(''); // To show answer feedback
+  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
+  const [playerName, setPlayerName] = useState<string>('');
 
-  // Ensure whole number results
-// Ensure whole number results, especially for division
-const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard'): Puzzle => {
+
+  const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard'): Puzzle => {
     let numbers: number[] = [];
     let operators: string[] = [];
     const availableOperators = ['+', '-', '*', '/'];
@@ -44,40 +63,40 @@ const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard'): Puzzle => {
   
     switch (difficulty) {
       case 'easy':
-        // Two 2-digit numbers with only + or - operators
+    
         numbers = [getRandomInt(10, 99), getRandomInt(10, 99)];
         operators = [availableOperators[getRandomInt(0, 1)]]; // Only + or -
         break;
       case 'medium':
-        // One 2-digit number and 1-digit numbers, mixed operators like "14 / 1 + 4 * 33"
+       
         numbers = [
-          getRandomInt(10, 99), // 2-digit number
-          getRandomInt(1, 4) * 2,    // 1-digit number
-          getRandomInt(1, 4) * 2,    // 1-digit number
-          getRandomInt(1, 4) * 2,  // 2-digit number
+          getRandomInt(10, 99),
+          getRandomInt(1, 4) * 2, 
+          getRandomInt(1, 4) * 2,
+          getRandomInt(1, 4) * 2, 
         ];
         operators = [
-          availableOperators[getRandomInt(2, 2)], // * or /
-          availableOperators[getRandomInt(0, 1)], // + or -
+          availableOperators[getRandomInt(2, 2)],
+          availableOperators[getRandomInt(0, 1)],
           availableOperators[getRandomInt(3, 4)]
         ];
         break;
       case 'hard':
-        // Three pairs of 1-digit numbers, mixed operators like "8 * 18 + 9 - 9 - 95 / 5"
+       
         numbers = [
-          getRandomInt(10, 99), // Single-digit number
-          getRandomInt(1, 9), // Two-digit number
-          getRandomInt(1, 9), // Single-digit number
-          getRandomInt(1, 9), // Two-digit number
-          getRandomInt(1, 4) * 2, // Single-digit number
-          getRandomInt(1, 9) * 2, // Two-digit number
+          getRandomInt(10, 99),
+          getRandomInt(1, 9),
+          getRandomInt(1, 9),
+          getRandomInt(1, 9),
+          getRandomInt(1, 4) * 2,
+          getRandomInt(10, 99) * 2, 
         ];
         operators = [
-          availableOperators[getRandomInt(2, 2)], // * or /
-          availableOperators[getRandomInt(0, 1)], // + or -
-          availableOperators[getRandomInt(0, 1)], // + or -
-          availableOperators[getRandomInt(2, 3)], // * or /
-          availableOperators[getRandomInt(0, 1)], // + or -
+          availableOperators[getRandomInt(2, 2)],
+          availableOperators[getRandomInt(0, 1)],
+          availableOperators[getRandomInt(0, 1)], 
+          availableOperators[getRandomInt(2, 3)],
+          availableOperators[getRandomInt(0, 1)],
         ];
         break;
       default:
@@ -101,24 +120,26 @@ const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard'): Puzzle => {
   
   
   const initializeGame = (selectedDifficulty: 'easy' | 'medium' | 'hard') => {
-    setDifficulty(selectedDifficulty); // Set the difficulty
+    setDifficulty(selectedDifficulty);
     const newPuzzle = generatePuzzle(selectedDifficulty);
     setCurrentGame({
       puzzle: newPuzzle,
       movesTaken: 0,
       score: 0,
       bestScore: currentGame.bestScore,
-      gameStarted: true, // Game is now started
+      gameStarted: true,
+      questionsAnswered: 0,
+      gameOver: false
     });
   };
 
 // Event listerer for Enter key press
 
-const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-  if (event.key === 'Enter') {
-    handleAnswerSubmit();
-  }
-};
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleAnswerSubmit();
+    }
+  };
 
   const handleAnswerSubmit = () => {
     const correctAnswer = currentGame.puzzle.result;
@@ -126,21 +147,34 @@ const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
       const normalizedAnswer = userAnswer.replace(',', '.');
     const isCorrect = parseFloat(normalizedAnswer) === correctAnswer;
 
-    setCurrentGame((prev) => ({
-      ...prev,
-      movesTaken: prev.movesTaken + 1,
-      score: prev.score + (isCorrect ? 10 : -5),
-      bestScore: Math.max(prev.bestScore, prev.score + (isCorrect ? 10 : -5)),
-    }));
+      // Declare variables for score keeping track of the number of questions answered
 
+      setCurrentGame((prev) => {
+        const newQuestionsAnswered = prev.questionsAnswered + 1;
+        const newGameOver = newQuestionsAnswered >= 10;
+      
+        return {
+  
+          ...prev,
+          movesTaken: prev.movesTaken + 1,
+          score: prev.score + (isCorrect ? 10 : -5),
+          bestScore: Math.max(prev.bestScore, prev.score + (isCorrect ? 10 : -5)),
+          questionsAnswered: newQuestionsAnswered,
+          gameOver: newGameOver,
+        };
+      });
     if (isCorrect) {
       setFeedbackMessage('Correct!');
-      const newPuzzle = generatePuzzle(difficulty);
-      setCurrentGame((prev) => ({
-        ...prev,
-        puzzle: newPuzzle,
-      }));
-      setUserAnswer('');
+      if(!currentGame.gameOver){
+        if (difficulty !== '') {
+          const newPuzzle = generatePuzzle(difficulty);
+          setCurrentGame((prev) => ({
+            ...prev,
+            puzzle: newPuzzle,
+          }));
+          setUserAnswer('');
+        }
+      }
     } else {
       setFeedbackMessage('Incorrect, try again.');
     }
@@ -155,6 +189,24 @@ const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     }));
   };
 
+
+  const navigate = useNavigate();
+
+  // Player gets sent to Leaderboard page after game is over
+
+  useEffect(() => {
+    if (currentGame.gameOver) {
+        const leaderboard = {
+            easy: [],
+            medium: [],
+            hard: [],
+        };
+        setLeaderboard(leaderboard);
+        navigate('/submit-score', { state: { score: currentGame.score, difficulty } });
+    }
+}, [currentGame.gameOver, currentGame.score, difficulty, navigate, setLeaderboard]);
+
+
   return (
     <div>
       <h1>Math Puzzle Game</h1>
@@ -164,6 +216,12 @@ const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
           <button style={{color: 'green'}} onClick={() => initializeGame('easy')}>Start Game (Easy)</button>
           <button style={{color: 'orange'}} onClick={() => initializeGame('medium')}>Start Game (Medium)</button>
           <button style={{color: 'red'}} onClick={() => initializeGame('hard')}>Start Game (Hard)</button>
+          <p>Or check out the leaderboard and see how others did!</p>
+            <button>
+            <Link to="/leaderboard">
+          Leaderboard
+            </Link>
+            </button>
         </div>
       ) : (
         <>
@@ -188,12 +246,30 @@ const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
           <div>
             <h2>Stats</h2>
             <div>Score: {currentGame.score}</div>
-            <div>Moves Taken: {currentGame.movesTaken}</div>
+            <div>Questions answered: {currentGame.movesTaken}</div>
             <div>Best Score: {currentGame.bestScore}</div>
           </div>
           <button onClick={handleStartGame}>Restart Game</button>
         </>
       )}
+
+      {currentGame.gameOver && (
+        <div>
+          <h2>Game Over</h2>
+          <p>Your final score is: {currentGame.score}</p>
+          <p>Best Score: {currentGame.bestScore}</p>
+          <input
+          type="text"
+          placeholder="Enter your name"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          className='name-input'
+        />
+
+          <button onClick={handleStartGame}>Restart Game</button>
+        </div>
+      )}
+
     </div>
   );
 };

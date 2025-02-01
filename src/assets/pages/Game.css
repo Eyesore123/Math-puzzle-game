@@ -1,5 +1,5 @@
 input {
-    width: 100%;
+    width: 80%;
     text-align: center;
     padding: 12px 20px;
     margin: 8px 0;
@@ -19,4 +19,8 @@ input {
     line-height: 2;
     margin-bottom: 5vh;
     margin-top: 7vh;
+}
+
+div {
+  max-width: 60vw;
 }
