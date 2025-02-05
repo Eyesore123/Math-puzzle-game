@@ -44,7 +44,7 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
     bestScore: 0,
     gameStarted: false,
     questionsAnswered: 0,
-    gameOver: false
+    gameOver: false,
   });
 
   const [userAnswer, setUserAnswer] = useState<string>('');
@@ -78,7 +78,7 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
         operators = [
           availableOperators[getRandomInt(2, 2)],
           availableOperators[getRandomInt(0, 1)],
-          availableOperators[getRandomInt(3, 4)]
+          availableOperators[getRandomInt(2, 3)]
         ];
         break;
       case 'hard':
@@ -165,11 +165,12 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
           score: prev.score + (isCorrect ? 10 : -5),
           bestScore: Math.max(prev.bestScore, prev.score + (isCorrect ? 10 : -5)),
           questionsAnswered: newQuestionsAnswered,
-          gameOver: newGameOver,
+          gameOver: newGameOver
         };
       });
     if (isCorrect) {
       setFeedbackMessage('Correct!');
+      setUserAnswer('');
       if(!currentGame.gameOver){
         if (difficulty !== '') {
           const newPuzzle = generatePuzzle(difficulty);
@@ -177,7 +178,6 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
             ...prev,
             puzzle: newPuzzle,
           }));
-          setUserAnswer('');
         }
       }
     } else {
@@ -244,7 +244,7 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
               type="text"
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
             />
             <button onClick={handleAnswerSubmit}>Submit</button>
           </div>
