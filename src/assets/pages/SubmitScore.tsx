@@ -7,22 +7,18 @@ interface LeaderboardEntry {
 }
 
 interface SubmitScoreProps {
-  setLeaderboard: (leaderboard: {
-    easy: LeaderboardEntry[];
-    medium: LeaderboardEntry[];
-    hard: LeaderboardEntry[];
-  }) => void;
+  setLeaderboard: (update: (prev: { easy: LeaderboardEntry[]; medium: LeaderboardEntry[]; hard: LeaderboardEntry[] }) => { easy: LeaderboardEntry[]; medium: LeaderboardEntry[]; hard: LeaderboardEntry[] }) => void;
 }
 
 const SubmitScore: React.FC<SubmitScoreProps> = ({ setLeaderboard }) => {
   const location = useLocation();
-  const { score, difficulty } = location.state || { score: 0, difficulty: 'easy' } as { score: number, difficulty: 'easy' | 'medium' | 'hard' };
+  const { score, difficulty }: { score: number, difficulty: 'easy' | 'medium' | 'hard' } = location.state;
   const [playerName, setPlayerName] = useState<string>('');
   const navigate = useNavigate();
 
   const handleSubmitName = () => {
     const newEntry: LeaderboardEntry = { name: playerName, score };
-    setLeaderboard((prev) => {
+    setLeaderboard((prev: { easy: LeaderboardEntry[]; medium: LeaderboardEntry[]; hard: LeaderboardEntry[] }) => {
       const updatedLeaderboard = { ...prev };
       updatedLeaderboard[difficulty].push(newEntry);
       localStorage.setItem('leaderboard', JSON.stringify(updatedLeaderboard));
