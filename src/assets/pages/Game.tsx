@@ -123,7 +123,6 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
     };
   };
   
-  
   const initializeGame = (selectedDifficulty: 'easy' | 'medium' | 'hard') => {
     setDifficulty(selectedDifficulty);
     const newPuzzle = generatePuzzle(selectedDifficulty);
