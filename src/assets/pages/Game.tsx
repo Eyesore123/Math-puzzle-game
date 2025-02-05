@@ -109,7 +109,12 @@ const Game: React.FC<GameProps> = ({ setLeaderboard }) => {
       ''
     );
   
-    const result = Math.round(eval(expression) * 10) / 10; // Round to 1 decimal place
+    function roundToDecimalPlaces(num: number, decimalPlaces: number) {
+      const multiplier = Math.pow(10, decimalPlaces);
+      return Math.round(num * multiplier) / multiplier;
+    }
+    
+    const result = roundToDecimalPlaces(eval(expression), 1);
   
     return {
       numbers,

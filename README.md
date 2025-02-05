@@ -10,7 +10,7 @@
 
 * The game works but it's still a work in progress. I intend to add a leaderboard, a game ending screen, style improvements and perhaps a timer and a few other things. Infernal difficulty mode would be nice too.
 
-# Written with
+# Made with:
 
 * HTML
 * CSS
