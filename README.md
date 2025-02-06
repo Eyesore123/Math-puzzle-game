@@ -16,3 +16,5 @@
 * CSS
 * Typescript
 * React
+
+![math_puzzle_game](https://github.com/user-attachments/assets/bd1c3970-717f-46f9-9e05-5e554807fc52)
