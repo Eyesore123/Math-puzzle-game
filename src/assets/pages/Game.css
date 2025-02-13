@@ -24,3 +24,8 @@ input {
 div {
   max-width: 60vw;
 }
+
+a {
+  color: #000000;
+  text-decoration: none;
+}
